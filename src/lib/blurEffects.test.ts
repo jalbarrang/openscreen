@@ -66,15 +66,56 @@ describe("blur color helpers", () => {
 		expect(normalizeBlurColor("invalid")).toBe("white");
 	});
 
-	it("returns a dark overlay when black blur color is selected", () => {
-		expect(
-			getBlurOverlayColor({
-				type: "blur",
-				shape: "rectangle",
-				color: "black",
-				intensity: 12,
-				blockSize: 12,
-			}),
-		).toBe("rgba(0, 0, 0, 0.18)");
+	it("returns the expected overlay color for each blur type/color combination", () => {
+		const cases = [
+			{
+				label: "black blur",
+				input: {
+					type: "blur",
+					shape: "rectangle",
+					color: "black",
+					intensity: 12,
+					blockSize: 12,
+				},
+				expected: "rgba(0, 0, 0, 0.56)",
+			},
+			{
+				label: "black mosaic",
+				input: {
+					type: "mosaic",
+					shape: "rectangle",
+					color: "black",
+					intensity: 12,
+					blockSize: 12,
+				},
+				expected: "rgba(0, 0, 0, 0.72)",
+			},
+			{
+				label: "white blur",
+				input: {
+					type: "blur",
+					shape: "rectangle",
+					color: "white",
+					intensity: 12,
+					blockSize: 12,
+				},
+				expected: "rgba(255, 255, 255, 0.02)",
+			},
+			{
+				label: "white mosaic",
+				input: {
+					type: "mosaic",
+					shape: "rectangle",
+					color: "white",
+					intensity: 12,
+					blockSize: 12,
+				},
+				expected: "rgba(255, 255, 255, 0.06)",
+			},
+		] as const;
+
+		for (const testCase of cases) {
+			expect(getBlurOverlayColor(testCase.input), testCase.label).toBe(testCase.expected);
+		}
 	});
 });

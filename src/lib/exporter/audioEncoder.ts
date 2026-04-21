@@ -1,5 +1,6 @@
 import { WebDemuxer } from "web-demuxer";
 import type { SpeedRegion, TrimRegion } from "@/components/video-editor/types";
+import { getAssetPath } from "@/lib/assetPath";
 import type { VideoMuxer } from "./muxer";
 
 const AUDIO_BITRATE = 128_000;
@@ -392,7 +393,7 @@ export class AudioProcessor {
 		if (this.cancelled) return;
 
 		const file = new File([blob], "speed-audio.webm", { type: blob.type || "audio/webm" });
-		const wasmUrl = new URL("./wasm/web-demuxer.wasm", window.location.href).href;
+		const wasmUrl = await getAssetPath("wasm/web-demuxer.wasm");
 		const demuxer = new WebDemuxer({ wasmFilePath: wasmUrl });
 
 		try {

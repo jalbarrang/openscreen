@@ -1,7 +1,31 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import sampleVideoUrl from "../../../tests/fixtures/sample.webm?url";
 import type { ExportProgress } from "./types";
 import { VideoExporter } from "./videoExporter";
+
+const originalElectronAPI = window.electronAPI;
+
+beforeAll(() => {
+	Object.defineProperty(window, "electronAPI", {
+		configurable: true,
+		value: {
+			...originalElectronAPI,
+			getPlatform: async () => "darwin",
+		},
+	});
+});
+
+afterAll(() => {
+	if (originalElectronAPI) {
+		Object.defineProperty(window, "electronAPI", {
+			configurable: true,
+			value: originalElectronAPI,
+		});
+		return;
+	}
+
+	Reflect.deleteProperty(window, "electronAPI");
+});
 
 describe("VideoExporter (real browser)", () => {
 	it("exports a valid MP4 blob from a real video", async () => {

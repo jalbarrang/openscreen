@@ -1,5 +1,6 @@
 export { FrameRenderer } from "./frameRenderer";
-export { calculateOutputDimensions, GifExporter } from "./gifExporter";
+export { calculateOutputDimensions } from "./gifDimensions";
+export { GifExporter } from "./gifExporter";
 export { VideoMuxer } from "./muxer";
 export { StreamingVideoDecoder } from "./streamingDecoder";
 export type {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateOutputDimensions } from "./gifExporter";
+import { calculateOutputDimensions } from "./gifDimensions";
 import { GIF_SIZE_PRESETS } from "./types";
 
 describe("calculateOutputDimensions", () => {

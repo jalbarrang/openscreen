@@ -1,7 +1,31 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import sampleVideoUrl from "../../../tests/fixtures/sample.webm?url";
 import { GifExporter } from "./gifExporter";
 import type { ExportProgress } from "./types";
+
+const originalElectronAPI = window.electronAPI;
+
+beforeAll(() => {
+	Object.defineProperty(window, "electronAPI", {
+		configurable: true,
+		value: {
+			...originalElectronAPI,
+			getPlatform: async () => "darwin",
+		},
+	});
+});
+
+afterAll(() => {
+	if (originalElectronAPI) {
+		Object.defineProperty(window, "electronAPI", {
+			configurable: true,
+			value: originalElectronAPI,
+		});
+		return;
+	}
+
+	Reflect.deleteProperty(window, "electronAPI");
+});
 
 describe("GifExporter (real browser)", () => {
 	it("exports a valid GIF blob from a real video", async () => {

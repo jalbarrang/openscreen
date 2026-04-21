@@ -1,5 +1,6 @@
 import { WebDemuxer } from "web-demuxer";
 import type { SpeedRegion, TrimRegion } from "@/components/video-editor/types";
+import { getAssetPath } from "@/lib/assetPath";
 
 const SOURCE_LOAD_TIMEOUT_MS = 60_000;
 const EPSILON_SEC = 0.001;
@@ -204,8 +205,7 @@ export class StreamingVideoDecoder {
 	async loadMetadata(videoUrl: string): Promise<DecodedVideoInfo> {
 		const { file } = await this.loadSourceFile(videoUrl);
 
-		// Relative URL so it resolves correctly in both dev (http) and packaged (file://) builds
-		const wasmUrl = new URL("./wasm/web-demuxer.wasm", window.location.href).href;
+		const wasmUrl = await getAssetPath("wasm/web-demuxer.wasm");
 		this.demuxer = new WebDemuxer({ wasmFilePath: wasmUrl });
 		await this.withTimeout(
 			this.demuxer.load(file),
