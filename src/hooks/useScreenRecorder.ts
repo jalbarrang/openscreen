@@ -403,6 +403,32 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 		}
 	});
 
+	const safeShowCountdownOverlay = useCallback(async (value: number, runId: number) => {
+		try {
+			await window.electronAPI.showCountdownOverlay(value, runId);
+			return true;
+		} catch (error) {
+			console.warn("Failed to show countdown overlay:", error);
+			return false;
+		}
+	}, []);
+
+	const safeSetCountdownOverlayValue = useCallback(async (value: number, runId: number) => {
+		try {
+			await window.electronAPI.setCountdownOverlayValue(value, runId);
+		} catch (error) {
+			console.warn("Failed to update countdown overlay value:", error);
+		}
+	}, []);
+
+	const safeHideCountdownOverlay = useCallback(async (runId: number) => {
+		try {
+			await window.electronAPI.hideCountdownOverlay(runId);
+		} catch (error) {
+			console.warn("Failed to hide countdown overlay:", error);
+		}
+	}, []);
+
 	useEffect(() => {
 		let cleanup: (() => void) | undefined;
 
@@ -445,39 +471,13 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			webcamRecorder.current = null;
 			teardownMedia();
 		};
-	}, [teardownMedia]);
-
-	const safeShowCountdownOverlay = async (value: number, runId: number) => {
-		try {
-			await window.electronAPI.showCountdownOverlay(value, runId);
-			return true;
-		} catch (error) {
-			console.warn("Failed to show countdown overlay:", error);
-			return false;
-		}
-	};
+	}, [safeHideCountdownOverlay, teardownMedia]);
 
 	const cancelCountdown = () => {
 		const activeRunId = countdownRunId.current;
 		countdownRunId.current += 1;
 		setCountdownActive(false);
 		void safeHideCountdownOverlay(activeRunId);
-	};
-
-	const safeSetCountdownOverlayValue = async (value: number, runId: number) => {
-		try {
-			await window.electronAPI.setCountdownOverlayValue(value, runId);
-		} catch (error) {
-			console.warn("Failed to update countdown overlay value:", error);
-		}
-	};
-
-	const safeHideCountdownOverlay = async (runId: number) => {
-		try {
-			await window.electronAPI.hideCountdownOverlay(runId);
-		} catch (error) {
-			console.warn("Failed to hide countdown overlay:", error);
-		}
 	};
 
 	const isCountdownRunActive = (runId?: number) =>

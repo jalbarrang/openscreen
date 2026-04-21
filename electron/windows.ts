@@ -1,6 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { BrowserWindow, ipcMain, screen } from "electron";
+import { assertTrustedIpcSender, hardenBrowserWindow } from "./security";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -11,7 +12,13 @@ const HEADLESS = process.env["HEADLESS"] === "true";
 
 let hudOverlayWindow: BrowserWindow | null = null;
 
-ipcMain.on("hud-overlay-hide", () => {
+ipcMain.on("hud-overlay-hide", (event) => {
+	try {
+		assertTrustedIpcSender(event, "hud-overlay-hide");
+	} catch {
+		return;
+	}
+
 	if (hudOverlayWindow && !hudOverlayWindow.isDestroyed()) {
 		hudOverlayWindow.minimize();
 	}
@@ -55,6 +62,8 @@ export function createHudOverlayWindow(): BrowserWindow {
 			backgroundThrottling: false,
 		},
 	});
+
+	hardenBrowserWindow(win);
 
 	// Follow the user across macOS Spaces (virtual desktops).
 	// Without this the HUD stays pinned to the Space it was first opened on.
@@ -112,10 +121,11 @@ export function createEditorWindow(): BrowserWindow {
 			preload: path.join(__dirname, "preload.mjs"),
 			nodeIntegration: false,
 			contextIsolation: true,
-			webSecurity: false,
 			backgroundThrottling: false,
 		},
 	});
+
+	hardenBrowserWindow(win);
 
 	// Maximize the window by default
 	win.maximize();
@@ -160,6 +170,8 @@ export function createSourceSelectorWindow(): BrowserWindow {
 			contextIsolation: true,
 		},
 	});
+
+	hardenBrowserWindow(win);
 
 	// Follow the user across macOS Spaces so the selector appears on the
 	// active desktop regardless of where the HUD was originally opened.
@@ -214,6 +226,7 @@ export function createCountdownOverlayWindow(): BrowserWindow {
 	});
 
 	win.setIgnoreMouseEvents(true);
+	hardenBrowserWindow(win);
 
 	if (process.platform === "darwin") {
 		win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });

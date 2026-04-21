@@ -15,6 +15,11 @@ import {
 import { mainT, setMainLocale } from "./i18n";
 import { registerIpcHandlers } from "./ipc/handlers";
 import {
+	assertTrustedIpcSender,
+	isAllowedPermission,
+	isTrustedPermissionRequest,
+} from "./security";
+import {
 	createCountdownOverlayWindow,
 	createEditorWindow,
 	createHudOverlayWindow,
@@ -254,7 +259,13 @@ function updateTrayMenu(recording: boolean = false) {
 let editorHasUnsavedChanges = false;
 let isForceClosing = false;
 
-ipcMain.on("set-has-unsaved-changes", (_, hasChanges: boolean) => {
+ipcMain.on("set-has-unsaved-changes", (event, hasChanges: boolean) => {
+	try {
+		assertTrustedIpcSender(event, "set-has-unsaved-changes");
+	} catch {
+		return;
+	}
+
 	editorHasUnsavedChanges = hasChanges;
 });
 
@@ -308,7 +319,10 @@ function createEditorWindowWrapper() {
 		if (choice === 0) {
 			// Save & Close — tell renderer to save, then close
 			windowToClose.webContents.send("request-save-before-close");
-			ipcMain.once("save-before-close-done", (_, shouldClose: boolean) => {
+			ipcMain.once("save-before-close-done", (replyEvent, shouldClose: boolean) => {
+				if (replyEvent.sender.id !== windowToClose.webContents.id) {
+					return;
+				}
 				if (!shouldClose) return;
 				forceCloseEditorWindow(windowToClose);
 			});
@@ -365,16 +379,33 @@ app.on("activate", () => {
 
 // Register all IPC handlers when app is ready
 app.whenReady().then(async () => {
-	// Allow microphone/media permission checks
-	session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
-		const allowed = ["media", "audioCapture", "microphone", "videoCapture", "camera"];
-		return allowed.includes(permission);
-	});
+	// Allow microphone/media permission checks only for trusted app windows.
+	session.defaultSession.setPermissionCheckHandler(
+		(webContents, permission, requestingOrigin, details) => {
+			return (
+				isAllowedPermission(permission) &&
+				isTrustedPermissionRequest(webContents, requestingOrigin, details.requestingUrl)
+			);
+		},
+	);
 
-	session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
-		const allowed = ["media", "audioCapture", "microphone", "videoCapture", "camera"];
-		callback(allowed.includes(permission));
-	});
+	session.defaultSession.setPermissionRequestHandler(
+		(webContents, permission, callback, details) => {
+			const requestingOrigin =
+				"requestingOrigin" in details && typeof details.requestingOrigin === "string"
+					? details.requestingOrigin
+					: undefined;
+			const requestingUrl =
+				"requestingUrl" in details && typeof details.requestingUrl === "string"
+					? details.requestingUrl
+					: undefined;
+
+			callback(
+				isAllowedPermission(permission) &&
+					isTrustedPermissionRequest(webContents, requestingOrigin, requestingUrl),
+			);
+		},
+	);
 
 	// Request microphone permission from macOS
 	if (process.platform === "darwin") {
@@ -385,10 +416,16 @@ app.whenReady().then(async () => {
 	}
 
 	// Listen for HUD overlay quit event (macOS only)
-	ipcMain.on("hud-overlay-close", () => {
+	ipcMain.on("hud-overlay-close", (event) => {
+		try {
+			assertTrustedIpcSender(event, "hud-overlay-close");
+		} catch {
+			return;
+		}
 		app.quit();
 	});
-	ipcMain.handle("set-locale", (_, locale: string) => {
+	ipcMain.handle("set-locale", (event, locale: string) => {
+		assertTrustedIpcSender(event, "set-locale");
 		setMainLocale(locale);
 		setupApplicationMenu();
 		updateTrayMenu();

@@ -1731,7 +1731,7 @@ export default function VideoEditor() {
 			</Dialog>
 
 			<div
-				className="h-10 flex-shrink-0 bg-[#09090b]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 z-50"
+				className="h-10 shrink-0 bg-[#09090b]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 z-50"
 				style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
 			>
 				<div
@@ -1745,7 +1745,7 @@ export default function VideoEditor() {
 						<select
 							value={locale}
 							onChange={(e) => setLocale(e.target.value as Locale)}
-							className="bg-transparent text-[11px] font-medium outline-none cursor-pointer appearance-none pr-1"
+							className="bg-transparent text-[11px] font-medium outline-hidden cursor-pointer appearance-none pr-1"
 							style={{ color: "inherit" }}
 						>
 							{availableLocales.map((loc) => (
@@ -1861,7 +1861,7 @@ export default function VideoEditor() {
 									</div>
 								</div>
 								{/* Playback controls */}
-								<div className="w-full flex justify-center items-center h-12 flex-shrink-0 px-3 py-1.5 my-1.5">
+								<div className="w-full flex justify-center items-center h-12 shrink-0 px-3 py-1.5 my-1.5">
 									<div className="w-full max-w-[700px]">
 										<PlaybackControls
 											isPlaying={isPlaying}

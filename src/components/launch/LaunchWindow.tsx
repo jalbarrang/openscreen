@@ -378,7 +378,7 @@ export function LaunchWindow() {
 										setSelectedMicId(e.target.value);
 										setMicrophoneDeviceId(e.target.value);
 									}}
-									className={`w-full appearance-none bg-white/5 text-white text-[11px] rounded-lg pl-2 pr-6 py-1 border border-white/10 outline-none hover:bg-white/10 transition-colors cursor-pointer ${!micExpanded ? "sr-only" : ""}`}
+									className={`w-full appearance-none bg-white/5 text-white text-[11px] rounded-lg pl-2 pr-6 py-1 border border-white/10 outline-hidden hover:bg-white/10 transition-colors cursor-pointer ${!micExpanded ? "sr-only" : ""}`}
 								>
 									{micDevices.map((device) => (
 										<option key={device.deviceId} value={device.deviceId} className="bg-[#1c1c24]">
@@ -437,7 +437,7 @@ export function LaunchWindow() {
 													setSelectedCameraId(e.target.value);
 													setWebcamDeviceId(e.target.value);
 												}}
-												className="w-full appearance-none bg-white/5 text-white text-[11px] rounded-lg pl-2 pr-6 py-1 border border-white/10 outline-none hover:bg-white/10 transition-colors cursor-pointer"
+												className="w-full appearance-none bg-white/5 text-white text-[11px] rounded-lg pl-2 pr-6 py-1 border border-white/10 outline-hidden hover:bg-white/10 transition-colors cursor-pointer"
 											>
 												{cameraDevices.map((device) => (
 													<option

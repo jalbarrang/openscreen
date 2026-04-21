@@ -250,7 +250,7 @@ function PlaybackCursor({
 	videoDurationMs: number;
 	onSeek?: (time: number) => void;
 	onRangeChange?: (updater: (previous: Range) => Range) => void;
-	timelineRef: React.RefObject<HTMLDivElement>;
+	timelineRef: React.RefObject<HTMLDivElement | null>;
 	keyframes?: { id: string; time: number }[];
 }) {
 	const { sidebarWidth, direction, range, valueToPixels, pixelsToValue } = useTimelineContext();

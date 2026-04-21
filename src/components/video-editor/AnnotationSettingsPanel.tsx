@@ -206,7 +206,7 @@ export function AnnotationSettingsPanel({
 								onChange={(e) => onContentChange(e.target.value)}
 								placeholder={t("annotation.textPlaceholder")}
 								rows={5}
-								className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-slate-200 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#34B27B] focus:border-transparent resize-none"
+								className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-slate-200 text-sm placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#34B27B] focus:border-transparent resize-none"
 							/>
 						</div>
 

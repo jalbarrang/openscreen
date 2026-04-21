@@ -117,7 +117,7 @@ export interface VideoPlaybackRef {
 	app: Application | null;
 	videoSprite: Sprite | null;
 	videoContainer: Container | null;
-	containerRef: React.RefObject<HTMLDivElement>;
+	containerRef: React.RefObject<HTMLDivElement | null>;
 	play: () => Promise<void>;
 	pause: () => void;
 }

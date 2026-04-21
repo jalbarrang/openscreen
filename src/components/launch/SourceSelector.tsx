@@ -96,7 +96,7 @@ export function SourceSelector() {
 				</div>
 				<div className="flex items-center gap-1.5">
 					{source.appIcon && (
-						<img src={source.appIcon} alt="" className={`${styles.icon} flex-shrink-0`} />
+						<img src={source.appIcon} alt="" className={`${styles.icon} shrink-0`} />
 					)}
 					<div className={`${styles.name} truncate`}>{source.name}</div>
 				</div>

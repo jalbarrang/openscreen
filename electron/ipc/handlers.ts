@@ -20,6 +20,7 @@ import {
 } from "../../src/lib/recordingSession";
 import { mainT } from "../i18n";
 import { RECORDINGS_DIR } from "../main";
+import { assertTrustedIpcSender } from "../security";
 
 const PROJECT_FILE_EXTENSION = "openscreen";
 const SHORTCUTS_FILE = path.join(app.getPath("userData"), "shortcuts.json");
@@ -369,6 +370,16 @@ export function registerIpcHandlers(
 	};
 	const COUNTDOWN_OVERLAY_HIDE_DEBOUNCE_MS = 1200;
 
+	const secureHandle = <TArgs extends unknown[], TResult>(
+		channel: string,
+		handler: (event: Electron.IpcMainInvokeEvent, ...args: TArgs) => TResult | Promise<TResult>,
+	) => {
+		ipcMain.handle(channel, (event, ...args) => {
+			assertTrustedIpcSender(event, channel);
+			return handler(event, ...(args as TArgs));
+		});
+	};
+
 	const clearCountdownOverlayHideCommit = () => {
 		if (countdownOverlayState.hideCommitTimer) {
 			clearTimeout(countdownOverlayState.hideCommitTimer);
@@ -428,7 +439,7 @@ export function registerIpcHandlers(
 		}, 16);
 	};
 
-	ipcMain.handle("countdown-overlay-show", (_, value: number, runId: number) => {
+	secureHandle("countdown-overlay-show", (_, value: number, runId: number) => {
 		countdownOverlayState.activeRunId = runId;
 		countdownOverlayState.visible = true;
 		countdownOverlayState.value = value;
@@ -449,7 +460,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle("countdown-overlay-set-value", (_, value: number, runId: number) => {
+	secureHandle("countdown-overlay-set-value", (_, value: number, runId: number) => {
 		if (countdownOverlayState.activeRunId !== runId || !countdownOverlayState.visible) {
 			return;
 		}
@@ -468,7 +479,7 @@ export function registerIpcHandlers(
 		win.webContents.send("countdown-overlay-value", value);
 	});
 
-	ipcMain.handle("countdown-overlay-hide", (_, runId: number) => {
+	secureHandle("countdown-overlay-hide", (_, runId: number) => {
 		if (countdownOverlayState.activeRunId !== runId) {
 			return;
 		}
@@ -505,10 +516,10 @@ export function registerIpcHandlers(
 		}, COUNTDOWN_OVERLAY_HIDE_DEBOUNCE_MS);
 	});
 
-	ipcMain.handle("switch-to-hud", () => {
+	secureHandle("switch-to-hud", () => {
 		if (switchToHud) switchToHud();
 	});
-	ipcMain.handle("start-new-recording", () => {
+	secureHandle("start-new-recording", () => {
 		try {
 			setCurrentRecordingSessionState(null);
 			if (switchToHud) {
@@ -521,7 +532,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle("get-sources", async (_, opts) => {
+	secureHandle("get-sources", async (_, opts: Electron.SourcesOptions) => {
 		const sources = await desktopCapturer.getSources(opts);
 		return sources.map((source) => ({
 			id: source.id,
@@ -532,7 +543,7 @@ export function registerIpcHandlers(
 		}));
 	});
 
-	ipcMain.handle("select-source", (_, source: SelectedSource) => {
+	secureHandle("select-source", (_, source: SelectedSource) => {
 		selectedSource = source;
 		const sourceSelectorWin = getSourceSelectorWindow();
 		if (sourceSelectorWin) {
@@ -541,11 +552,11 @@ export function registerIpcHandlers(
 		return selectedSource;
 	});
 
-	ipcMain.handle("get-selected-source", () => {
+	secureHandle("get-selected-source", () => {
 		return selectedSource;
 	});
 
-	ipcMain.handle("request-camera-access", async () => {
+	secureHandle("request-camera-access", async () => {
 		if (process.platform !== "darwin") {
 			return { success: true, granted: true, status: "granted" };
 		}
@@ -577,7 +588,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle("open-source-selector", () => {
+	secureHandle("open-source-selector", () => {
 		const sourceSelectorWin = getSourceSelectorWindow();
 		if (sourceSelectorWin) {
 			sourceSelectorWin.focus();
@@ -586,7 +597,7 @@ export function registerIpcHandlers(
 		createSourceSelectorWindow();
 	});
 
-	ipcMain.handle("switch-to-editor", () => {
+	secureHandle("switch-to-editor", () => {
 		const mainWin = getMainWindow();
 		if (mainWin) {
 			mainWin.close();
@@ -594,7 +605,7 @@ export function registerIpcHandlers(
 		createEditorWindow();
 	});
 
-	ipcMain.handle("store-recorded-session", async (_, payload: StoreRecordedSessionInput) => {
+	secureHandle("store-recorded-session", async (_, payload: StoreRecordedSessionInput) => {
 		try {
 			return await storeRecordedSessionFiles(payload);
 		} catch (error) {
@@ -607,7 +618,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle("store-recorded-video", async (_, videoData: ArrayBuffer, fileName: string) => {
+	secureHandle("store-recorded-video", async (_, videoData: ArrayBuffer, fileName: string) => {
 		try {
 			return await storeRecordedSessionFiles({
 				screen: { videoData, fileName },
@@ -623,7 +634,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle("get-recorded-video-path", async () => {
+	secureHandle("get-recorded-video-path", async () => {
 		try {
 			if (currentRecordingSession?.screenVideoPath) {
 				return { success: true, path: currentRecordingSession.screenVideoPath };
@@ -665,7 +676,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle("read-binary-file", async (_, inputPath: string) => {
+	secureHandle("read-binary-file", async (_, inputPath: string) => {
 		try {
 			const normalizedPath = normalizeVideoSourcePath(inputPath);
 			if (!normalizedPath) {
@@ -696,7 +707,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle("set-recording-state", (_, recording: boolean) => {
+	secureHandle("set-recording-state", (_, recording: boolean) => {
 		if (recording) {
 			stopCursorCapture();
 			activeCursorSamples = [];
@@ -716,7 +727,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle("get-cursor-telemetry", async (_, videoPath?: string) => {
+	secureHandle("get-cursor-telemetry", async (_, videoPath?: string) => {
 		const targetVideoPath = normalizeVideoSourcePath(
 			videoPath ?? currentRecordingSession?.screenVideoPath,
 		);
@@ -779,7 +790,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle("open-external-url", async (_, url: string) => {
+	secureHandle("open-external-url", async (_, url: string) => {
 		try {
 			const ALLOWED_SCHEMES = ["http:", "https:", "mailto:"];
 			let parsed: URL;
@@ -802,7 +813,7 @@ export function registerIpcHandlers(
 	});
 
 	// Return base path for assets so renderer can resolve file:// paths in production
-	ipcMain.handle("get-asset-base-path", () => {
+	secureHandle("get-asset-base-path", () => {
 		try {
 			if (app.isPackaged) {
 				const assetPath = path.join(process.resourcesPath, "assets");
@@ -826,7 +837,7 @@ export function registerIpcHandlers(
 	 * @returns Object with success status, optional file path, and error details.
 	 */
 
-	ipcMain.handle("save-exported-video", async (_, videoData: ArrayBuffer, fileName: string) => {
+	secureHandle("save-exported-video", async (_, videoData: ArrayBuffer, fileName: string) => {
 		try {
 			// Determine file type from extension
 			const isGif = fileName.toLowerCase().endsWith(".gif");
@@ -874,7 +885,7 @@ export function registerIpcHandlers(
 			};
 		}
 	});
-	ipcMain.handle("open-video-file-picker", async () => {
+	secureHandle("open-video-file-picker", async () => {
 		try {
 			const result = await dialog.showOpenDialog({
 				title: mainT("dialogs", "fileDialogs.selectVideo"),
@@ -915,7 +926,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle("reveal-in-folder", async (_, filePath: string) => {
+	secureHandle("reveal-in-folder", async (_, filePath: string) => {
 		try {
 			// shell.showItemInFolder doesn't return a value, it throws on error
 			shell.showItemInFolder(filePath);
@@ -939,7 +950,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle(
+	secureHandle(
 		"save-project-file",
 		async (_, projectData: unknown, suggestedName?: string, existingProjectPath?: string) => {
 			try {
@@ -1006,7 +1017,7 @@ export function registerIpcHandlers(
 		},
 	);
 
-	ipcMain.handle("load-project-file", async () => {
+	secureHandle("load-project-file", async () => {
 		try {
 			const result = await dialog.showOpenDialog({
 				title: mainT("dialogs", "fileDialogs.openProject"),
@@ -1048,7 +1059,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle("load-current-project-file", async () => {
+	secureHandle("load-current-project-file", async () => {
 		try {
 			if (!currentProjectPath) {
 				return { success: false, message: "No active project" };
@@ -1072,20 +1083,20 @@ export function registerIpcHandlers(
 			};
 		}
 	});
-	ipcMain.handle("set-current-recording-session", (_, session: RecordingSession | null) => {
+	secureHandle("set-current-recording-session", (_, session: RecordingSession | null) => {
 		const normalized = normalizeRecordingSession(session);
 		setCurrentRecordingSessionState(normalized);
 		currentProjectPath = null;
 		return { success: true, session: normalized ?? undefined };
 	});
 
-	ipcMain.handle("get-current-recording-session", () => {
+	secureHandle("get-current-recording-session", () => {
 		return currentRecordingSession
 			? { success: true, session: currentRecordingSession }
 			: { success: false };
 	});
 
-	ipcMain.handle("set-current-video-path", async (_, path: string) => {
+	secureHandle("set-current-video-path", async (_, path: string) => {
 		const normalizedPath = normalizeVideoSourcePath(path);
 		if (!normalizedPath || !isPathAllowed(normalizedPath)) {
 			return { success: false, message: "Video path has not been approved" };
@@ -1109,22 +1120,22 @@ export function registerIpcHandlers(
 		return { success: true };
 	});
 
-	ipcMain.handle("get-current-video-path", () => {
+	secureHandle("get-current-video-path", () => {
 		return currentRecordingSession?.screenVideoPath
 			? { success: true, path: currentRecordingSession.screenVideoPath }
 			: { success: false };
 	});
 
-	ipcMain.handle("clear-current-video-path", () => {
+	secureHandle("clear-current-video-path", () => {
 		setCurrentRecordingSessionState(null);
 		return { success: true };
 	});
 
-	ipcMain.handle("get-platform", () => {
+	secureHandle("get-platform", () => {
 		return process.platform;
 	});
 
-	ipcMain.handle("get-shortcuts", async () => {
+	secureHandle("get-shortcuts", async () => {
 		try {
 			const data = await fs.readFile(SHORTCUTS_FILE, "utf-8");
 			return JSON.parse(data);
@@ -1133,7 +1144,7 @@ export function registerIpcHandlers(
 		}
 	});
 
-	ipcMain.handle("save-shortcuts", async (_, shortcuts: unknown) => {
+	secureHandle("save-shortcuts", async (_, shortcuts: unknown) => {
 		try {
 			await fs.writeFile(SHORTCUTS_FILE, JSON.stringify(shortcuts, null, 2), "utf-8");
 			return { success: true };

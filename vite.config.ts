@@ -1,4 +1,5 @@
 import path from "node:path";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import electron from "vite-plugin-electron/simple";
@@ -6,6 +7,7 @@ import electron from "vite-plugin-electron/simple";
 // https://vitejs.dev/config/
 export default defineConfig({
 	plugins: [
+		tailwindcss(),
 		react(),
 		electron({
 			main: {
@@ -43,15 +45,6 @@ export default defineConfig({
 				drop_console: true,
 				drop_debugger: true,
 				pure_funcs: ["console.log", "console.debug"],
-			},
-		},
-		rollupOptions: {
-			output: {
-				manualChunks: {
-					pixi: ["pixi.js"],
-					"react-vendor": ["react", "react-dom"],
-					"video-processing": ["mediabunny", "mp4box", "@fix-webm-duration/fix"],
-				},
 			},
 		},
 		chunkSizeWarningLimit: 1000,

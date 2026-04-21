@@ -116,7 +116,7 @@ function CustomSpeedInput({
 				onChange={handleChange}
 				onBlur={handleBlur}
 				onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-				className="w-12 bg-white/5 border border-white/10 rounded-md px-1 py-0.5 text-[11px] font-semibold text-[#d97706] text-center focus:outline-none focus:border-[#d97706]/40"
+				className="w-12 bg-white/5 border border-white/10 rounded-md px-1 py-0.5 text-[11px] font-semibold text-[#d97706] text-center focus:outline-hidden focus:border-[#d97706]/40"
 			/>
 			<span className="text-[11px] font-semibold text-slate-500">×</span>
 		</div>
@@ -1278,7 +1278,7 @@ export function SettingsPanel({
 											max={max}
 											value={getCropPixelValue(field)}
 											onChange={(e) => handleCropNumericChange(field, Number(e.target.value))}
-											className="w-[90px] h-8 rounded-md border border-white/10 bg-white/5 px-2 text-xs text-slate-200 outline-none focus:border-[#34B27B]/50 focus:ring-1 focus:ring-[#34B27B]/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+											className="w-[90px] h-8 rounded-md border border-white/10 bg-white/5 px-2 text-xs text-slate-200 outline-hidden focus:border-[#34B27B]/50 focus:ring-1 focus:ring-[#34B27B]/30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
 										/>
 									</div>
 								))}
@@ -1291,7 +1291,7 @@ export function SettingsPanel({
 										<select
 											value={cropAspectRatio}
 											onChange={(e) => applyCropAspectPreset(e.target.value)}
-											className="h-8 rounded-md border border-white/10 bg-[#1a1a1f] px-2 text-xs text-slate-200 outline-none focus:border-[#34B27B]/50 cursor-pointer"
+											className="h-8 rounded-md border border-white/10 bg-[#1a1a1f] px-2 text-xs text-slate-200 outline-hidden focus:border-[#34B27B]/50 cursor-pointer"
 										>
 											<option value="" className="bg-[#1a1a1f] text-slate-200">
 												{t("crop.free")}
@@ -1356,7 +1356,7 @@ export function SettingsPanel({
 				</>
 			)}
 
-			<div className="flex-shrink-0 p-4 pt-3 border-t border-white/5 bg-[#09090b]">
+			<div className="shrink-0 p-4 pt-3 border-t border-white/5 bg-[#09090b]">
 				<div className="flex items-center gap-2 mb-3">
 					<button
 						onClick={() => onExportFormatChange?.("mp4")}
